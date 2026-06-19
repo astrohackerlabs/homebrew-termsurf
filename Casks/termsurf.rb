@@ -2,7 +2,8 @@ cask "termsurf" do
   version "0.1.6"
   sha256 "2cecf0a518b087b6feb59f8d37203cde6b3d411b59e430234b21e7bad74e2016"
 
-  url "https://github.com/termsurf/termsurf/releases/download/v#{version}/termsurf-#{version}-aarch64-apple-darwin.tar.gz"
+  url "https://github.com/termsurf/termsurf/releases/download/v#{version}/termsurf-#{version}-aarch64-apple-darwin.tar.gz",
+      verified: "github.com/termsurf/termsurf/"
   name "TermSurf"
   desc "Protocol for embedding web browsers inside terminal emulators"
   homepage "https://termsurf.com/"
