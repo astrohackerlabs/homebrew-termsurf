@@ -8,6 +8,7 @@ cask "termsurf" do
   desc "Protocol for embedding web browsers inside terminal emulators"
   homepage "https://termsurf.com/"
 
+  depends_on arch: :arm64
   depends_on macos: :sequoia
 
   app "TermSurf.app"
