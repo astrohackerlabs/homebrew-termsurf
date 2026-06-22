@@ -14,12 +14,15 @@ cask "termsurf" do
   app "TermSurf.app"
   binary "web"
   artifact "roamium", target: "/opt/homebrew/opt/termsurf-roamium"
+  artifact "surfari", target: "/opt/homebrew/opt/termsurf-surfari"
 
   postflight do
     app_path = "#{appdir}/TermSurf.app"
 
     system_command "codesign", args: ["--force", "--sign", "-", staged_path/"web"]
     system_command "codesign", args: ["--force", "--sign", "-", "/opt/homebrew/opt/termsurf-roamium/roamium"]
+    system_command "codesign", args: ["--force", "--sign", "-", "/opt/homebrew/opt/termsurf-surfari/surfari"]
+    system_command "codesign", args: ["--force", "--sign", "-", "/opt/homebrew/opt/termsurf-surfari/libtermsurf_webkit.dylib"]
     system_command "codesign",
                    args: ["--force", "--deep", "--sign", "-",
                           app_path]
@@ -27,6 +30,7 @@ cask "termsurf" do
     # to all extracted files, and Gatekeeper blocks unsigned binaries
     system_command "xattr", args: ["-cr", app_path]
     system_command "xattr", args: ["-cr", "/opt/homebrew/opt/termsurf-roamium"]
+    system_command "xattr", args: ["-cr", "/opt/homebrew/opt/termsurf-surfari"]
     system_command "xattr", args: ["-cr", staged_path/"web"]
   end
 
