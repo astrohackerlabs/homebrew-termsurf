@@ -29,6 +29,7 @@ cask "termsurf" do
       "WebInspectorUI.framework",
       "WebGPU.framework",
       "libANGLE-shared.dylib",
+      "libWebKitSwift.dylib",
       "libwebrtc.dylib",
       "com.apple.WebKit.GPU.xpc",
       "com.apple.WebKit.Model.xpc",
