@@ -40,14 +40,6 @@ cask "termsurf" do
       "com.apple.WebKit.WebContent.xpc",
     ]
 
-    system_command "codesign", args: ["--force", "--sign", "-", staged_path/"web"]
-    system_command "codesign", args: ["--force", "--sign", "-", "/opt/homebrew/opt/termsurf-roamium/roamium"]
-    surfari_runtime_artifacts.each do |artifact|
-      system_command "codesign", args: ["--force", "--deep", "--sign", "-", "#{surfari_dir}/#{artifact}"]
-    end
-    system_command "codesign",
-                   args: ["--force", "--deep", "--sign", "-",
-                          app_path]
     # Clear quarantine on everything — the tarball propagates the attribute
     # to all extracted files, and Gatekeeper blocks unsigned binaries
     system_command "xattr", args: ["-cr", app_path]
@@ -56,6 +48,15 @@ cask "termsurf" do
       system_command "xattr", args: ["-cr", "#{surfari_dir}/#{artifact}"]
     end
     system_command "xattr", args: ["-cr", staged_path/"web"]
+
+    system_command "codesign", args: ["--force", "--sign", "-", staged_path/"web"]
+    system_command "codesign", args: ["--force", "--sign", "-", "/opt/homebrew/opt/termsurf-roamium/roamium"]
+    surfari_runtime_artifacts.each do |artifact|
+      system_command "codesign", args: ["--force", "--deep", "--sign", "-", "#{surfari_dir}/#{artifact}"]
+    end
+    system_command "codesign",
+                   args: ["--force", "--deep", "--sign", "-",
+                          app_path]
   end
 
   zap trash: [
