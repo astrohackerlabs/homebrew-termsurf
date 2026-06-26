@@ -42,12 +42,17 @@ cask "termsurf" do
 
     # Clear quarantine on everything — the tarball propagates the attribute
     # to all extracted files, and Gatekeeper blocks unsigned binaries
-    system_command "xattr", args: ["-cr", app_path]
-    system_command "xattr", args: ["-cr", "/opt/homebrew/opt/termsurf-roamium"]
-    surfari_runtime_artifacts.each do |artifact|
-      system_command "xattr", args: ["-cr", "#{surfari_dir}/#{artifact}"]
+    clear_xattrs = lambda do |path|
+      system_command "find", args: [path.to_s, "!", "-type", "l",
+                                    "-exec", "xattr", "-c", "{}", "+"]
     end
-    system_command "xattr", args: ["-cr", staged_path/"web"]
+
+    clear_xattrs.call(app_path)
+    clear_xattrs.call("/opt/homebrew/opt/termsurf-roamium")
+    surfari_runtime_artifacts.each do |artifact|
+      clear_xattrs.call("#{surfari_dir}/#{artifact}")
+    end
+    clear_xattrs.call(staged_path/"web")
 
     system_command "codesign", args: ["--force", "--sign", "-", staged_path/"web"]
     system_command "codesign", args: ["--force", "--sign", "-", "/opt/homebrew/opt/termsurf-roamium/roamium"]
