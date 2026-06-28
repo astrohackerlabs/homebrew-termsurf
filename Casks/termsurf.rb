@@ -1,6 +1,6 @@
 cask "termsurf" do
-  version "1.4.7"
-  sha256 "412714cf155ff3d344e3a39758047a8c90da49306efd5ff6943273dde6b999b7"
+  version "1.4.8"
+  sha256 "5f33f58d89559690d85c71c21aa2c28287b17010bed052c858acade62501515a"
 
   url "https://github.com/termsurf/termsurf/releases/download/v#{version}/termsurf-#{version}-aarch64-apple-darwin.tar.gz",
       verified: "github.com/termsurf/termsurf/"
