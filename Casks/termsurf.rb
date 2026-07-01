@@ -77,6 +77,12 @@ cask "termsurf" do
       start_mono = Process.clock_gettime(Process::CLOCK_MONOTONIC, :millisecond)
       start_wall = (Time.now.to_f * 1000).to_i
 
+      if engine == "roamium"
+        ohai "Warming up Roamium. This can take up to two minutes after install or upgrade."
+      else
+        ohai "Warming up Surfari. This is usually much faster."
+      end
+
       File.open(log_path, "a") do |log|
         log.puts("TermSurfPostflightWarmup event=start engine=#{engine} " \
                  "wall_ms=#{start_wall} binary=#{binary}")
