@@ -10,6 +10,7 @@ cask "termsurf" do
 
   depends_on arch: :arm64
   depends_on macos: :sequoia
+  depends_on formula: "deno"
 
   app "TermSurf.app"
   binary "web"
