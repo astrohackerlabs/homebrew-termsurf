@@ -1,6 +1,6 @@
 cask "termsurf" do
-  version "1.4.15"
-  sha256 "361f70c61f18b32a187bc6225677bfa86eb129569356dd86e6b7d2eb53ffe64c"
+  version "1.4.16"
+  sha256 "91b04aa7e0995cae1579fe80d61c8834045071856ea300eff05534504a980f7a"
 
   url "https://github.com/termsurf/termsurf/releases/download/v#{version}/termsurf-#{version}-aarch64-apple-darwin.tar.gz",
       verified: "github.com/termsurf/termsurf/"
@@ -68,6 +68,90 @@ cask "termsurf" do
     system_command "codesign",
                    args: ["--force", "--deep", "--sign", "-",
                           app_path]
+
+    warmup_log = "/opt/homebrew/var/log/termsurf/postflight-warmup.log"
+    system_command "mkdir", args: ["-p", File.dirname(warmup_log)]
+    warmup_engine = lambda do |engine, binary, framework_path = ""|
+      log_path = warmup_log
+      timeout_seconds = 180
+      start_mono = Process.clock_gettime(Process::CLOCK_MONOTONIC, :millisecond)
+      start_wall = (Time.now.to_f * 1000).to_i
+
+      File.open(log_path, "a") do |log|
+        log.puts("TermSurfPostflightWarmup event=start engine=#{engine} " \
+                 "wall_ms=#{start_wall} binary=#{binary}")
+      end
+
+      env = {
+        "TERMSURF_ENGINE_STARTUP_TRACE" => "1",
+        "TERMSURF_ENGINE_STARTUP_TRACE_FILE" => log_path,
+      }
+      env["DYLD_FRAMEWORK_PATH"] = framework_path unless framework_path.empty?
+
+      status = nil
+      timed_out = false
+      pid = nil
+      begin
+        pid = Process.spawn(env, binary, "--termsurf-warmup")
+        deadline = Time.now + timeout_seconds
+        loop do
+          waited = Process.waitpid2(pid, Process::WNOHANG)
+          if waited
+            status = waited[1]
+            break
+          end
+          if Time.now >= deadline
+            timed_out = true
+            begin
+              Process.kill("TERM", pid)
+            rescue Errno::ESRCH
+            end
+            sleep 1
+            begin
+              Process.kill("KILL", pid)
+            rescue Errno::ESRCH
+            end
+            begin
+              Process.wait(pid)
+            rescue Errno::ECHILD
+            end
+            break
+          end
+          sleep 0.25
+        end
+      rescue SystemCallError
+      end
+
+      duration_ms = Process.clock_gettime(Process::CLOCK_MONOTONIC, :millisecond) - start_mono
+      success = status&.success? == true && !timed_out
+      exit_status = if status
+        status.exitstatus
+      else
+        "unknown"
+      end
+
+      File.open(log_path, "a") do |log|
+        log.puts("TermSurfPostflightWarmup event=done engine=#{engine} " \
+                 "wall_ms=#{(Time.now.to_f * 1000).to_i} " \
+                 "duration_ms=#{duration_ms} success=#{success} " \
+                 "timed_out=#{timed_out} exit_status=#{exit_status}")
+      end
+
+      unless success
+        opoo "TermSurf #{engine} postflight warmup failed or timed out; " \
+             "first browser launch may be slower. See #{warmup_log}."
+      end
+    end
+
+    if ENV["HOMEBREW_TERMSURF_SKIP_POSTFLIGHT_WARMUP"] == "1"
+      File.open(warmup_log, "a") do |log|
+        log.puts("TermSurfPostflightWarmup event=skipped " \
+                 "reason=HOMEBREW_TERMSURF_SKIP_POSTFLIGHT_WARMUP")
+      end
+    else
+      warmup_engine.call("roamium", "/opt/homebrew/opt/termsurf-roamium/roamium")
+      warmup_engine.call("surfari", "#{surfari_dir}/surfari", surfari_dir)
+    end
   end
 
   zap trash: [
