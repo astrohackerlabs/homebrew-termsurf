@@ -13,8 +13,10 @@ cask "termsurf" do
 
   app "TermSurf.app"
   binary "web"
+  binary "termsurf"
   artifact "roamium", target: "/opt/homebrew/opt/termsurf-roamium"
   artifact "surfari", target: "/opt/homebrew/opt/termsurf-surfari"
+  artifact "gtui", target: "/opt/homebrew/opt/termsurf-gtui"
 
   postflight do
     app_path = "#{appdir}/TermSurf.app"
@@ -49,12 +51,15 @@ cask "termsurf" do
 
     clear_xattrs.call(app_path)
     clear_xattrs.call("/opt/homebrew/opt/termsurf-roamium")
+    clear_xattrs.call("/opt/homebrew/opt/termsurf-gtui")
     surfari_runtime_artifacts.each do |artifact|
       clear_xattrs.call("#{surfari_dir}/#{artifact}")
     end
     clear_xattrs.call(staged_path/"web")
+    clear_xattrs.call(staged_path/"termsurf")
 
     system_command "codesign", args: ["--force", "--sign", "-", staged_path/"web"]
+    system_command "codesign", args: ["--force", "--sign", "-", staged_path/"termsurf"]
     system_command "codesign", args: ["--force", "--sign", "-", "/opt/homebrew/opt/termsurf-roamium/roamium"]
     surfari_runtime_artifacts.each do |artifact|
       system_command "codesign", args: ["--force", "--deep", "--sign", "-", "#{surfari_dir}/#{artifact}"]
