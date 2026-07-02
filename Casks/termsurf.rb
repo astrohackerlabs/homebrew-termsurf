@@ -17,11 +17,13 @@ cask "termsurf" do
   binary "termsurf"
   artifact "roamium", target: "/opt/homebrew/opt/termsurf-roamium"
   artifact "surfari", target: "/opt/homebrew/opt/termsurf-surfari"
+  artifact "girlbat", target: "/opt/homebrew/opt/termsurf-girlbat"
   artifact "gtui", target: "/opt/homebrew/opt/termsurf-gtui"
 
   postflight do
     app_path = "#{appdir}/TermSurf.app"
     surfari_dir = "/opt/homebrew/opt/termsurf-surfari"
+    girlbat_dir = "/opt/homebrew/opt/termsurf-girlbat"
     surfari_runtime_artifacts = [
       "surfari",
       "libtermsurf_webkit.dylib",
@@ -42,6 +44,14 @@ cask "termsurf" do
       "com.apple.WebKit.WebContent.EnhancedSecurity.xpc",
       "com.apple.WebKit.WebContent.xpc",
     ]
+    girlbat_executable_artifacts = [
+      "bin/girlbat",
+      "bin/ImageDecoder",
+      "bin/RequestServer",
+      "bin/WebContent",
+      "bin/WebWorker",
+      "bin/Compositor",
+    ]
 
     # Clear quarantine on everything — the tarball propagates the attribute
     # to all extracted files, and Gatekeeper blocks unsigned binaries
@@ -53,6 +63,7 @@ cask "termsurf" do
     clear_xattrs.call(app_path)
     clear_xattrs.call("/opt/homebrew/opt/termsurf-roamium")
     clear_xattrs.call("/opt/homebrew/opt/termsurf-gtui")
+    clear_xattrs.call(girlbat_dir)
     surfari_runtime_artifacts.each do |artifact|
       clear_xattrs.call("#{surfari_dir}/#{artifact}")
     end
@@ -64,6 +75,15 @@ cask "termsurf" do
     system_command "codesign", args: ["--force", "--sign", "-", "/opt/homebrew/opt/termsurf-roamium/roamium"]
     surfari_runtime_artifacts.each do |artifact|
       system_command "codesign", args: ["--force", "--deep", "--sign", "-", "#{surfari_dir}/#{artifact}"]
+    end
+    Dir["#{girlbat_dir}/lib/*.dylib"].sort.each do |dylib|
+      system_command "codesign", args: ["--force", "--sign", "-", dylib]
+    end
+    girlbat_executable_artifacts.each do |artifact|
+      path = "#{girlbat_dir}/#{artifact}"
+      next unless File.exist?(path)
+
+      system_command "codesign", args: ["--force", "--deep", "--sign", "-", path]
     end
     system_command "codesign",
                    args: ["--force", "--deep", "--sign", "-",
